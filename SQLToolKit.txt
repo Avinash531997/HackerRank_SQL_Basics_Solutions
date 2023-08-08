@@ -1,0 +1,530 @@
+=====================================================================================================================================
+
+Order of Execution in SQL - 
+/*
+From
+Join
+Where
+GroupBy
+Agg
+Having
+Select
+Distinct
+Orderby
+Limit
+*/
+
+Fir Wahi Gandi Harkate Shuru Oye Lallu.
+From Wilsons Garden 
+=====================================================================================================================================
+Query the two cities in STATION with the shortest and longest CITY names, as well as their respective lengths 
+(i.e.: number of characters in the name). If there is more than one smallest or largest city, choose the one that comes 
+first when ordered alphabetically.
+
+select CITY, length(CITY) as leng from STATION order by leng,CITY limit 1;
+select CITY, length(CITY) as leng from STATION order by leng DESC,CITY ASC limit 1;
+=====================================================================================================================================
+
+Query the list of CITY names starting with vowels (i.e., a, e, i, o, or u) from STATION. Your result cannot contain duplicates.
+
+select distinct CITY from STATION where CITY REGEXP '^[a,e,i,o,u]';
+
+=====================================================================================================================================
+
+Query the list of CITY names ending with vowels (a, e, i, o, u) from STATION. Your result cannot contain duplicates.
+
+select Distinct CITY from STATION where CITY REGEXP '[a,e,i,o,u]$';
+
+=====================================================================================================================================
+
+Query the list of CITY names from STATION which have vowels (i.e., a, e, i, o, and u) as both their first and last characters. 
+Your result cannot contain duplicates.
+
+select distinct CITY from STATION where CITY REGEXP '^[a,e,i,o,u].*[a,e,i,o,u]$';
+
+=====================================================================================================================================
+
+Query the list of CITY names from STATION that do not start with vowels. Your result cannot contain duplicates.
+
+select distinct CITY from STATION where CITY REGEXP '^[^a,e,i,o,u]';
+
+=====================================================================================================================================
+
+Query the list of CITY names from STATION that do not end with vowels. Your result cannot contain duplicates.
+
+select distinct CITY from STATION where CITY REGEXP '[^a,e,i,o,u]$';
+
+=====================================================================================================================================
+
+Query the list of CITY names from STATION that either do not start with vowels or do not end with vowels.
+Your result cannot contain duplicates.
+
+select distinct CITY from STATION where (CITY REGEXP '^[^aeiou]' or CITY REGEXP '[^a,e,i,o,u]$');
+
+=====================================================================================================================================
+
+Given the CITY and COUNTRY tables, query the names of all the continents (COUNTRY.Continent) and their respective average city 
+populations (CITY.Population) rounded down to the nearest integer.
+Note: CITY.CountryCode and COUNTRY.Code are matching key columns.
+
+select continent, floor(AVG(City.Population)) as AveragePopulation from 
+CITY INNER JOIN COUNTRY on CITY.COUNTRYCODE = COUNTRY.CODE group by continent;
+
+=====================================================================================================================================
+
+You are given two tables: Students and Grades. Students contains three columns ID, Name and Marks.
+Ketty gives Eve a task to generate a report containing three columns: Name, Grade and Mark. 
+Ketty doesn't want the NAMES of those students who received a grade lower than 8. The report must be in descending order by grade 
+-- i.e. higher grades are entered first. If there is more than one student with the same grade (8-10) assigned to them, order those 
+particular students by their name alphabetically. Finally, if the grade is lower than 8, use "NULL" as their name and list them by 
+their grades in descending order. If there is more than one student with the same grade (1-7) assigned to them, order those particular 
+students by their marks in ascending order.
+Write a query to help Eve.
+
+Students-
+ID
+Name
+Marks
+
+Grade-
+GradeMin_Mark
+Max_Mark
+
+
+(select 
+case 
+    when grades.grade<8 then 'NULL'
+    else students.name
+    end
+,grades.grade,students.marks
+from students,grades where students.marks>=grades.Min_Mark and students.marks<=grades.Max_Mark order by grades.grade desc, 
+students.name asc
+)
+
+=====================================================================================================================================
+
+Julia just finished conducting a coding contest, and she needs your help assembling the leaderboard! Write a query to print 
+the respective hacker_id and name of hackers who achieved full scores for more than one challenge. Order your output in 
+descending order by the total number of challenges in which the hacker earned a full score. If more than one hacker received 
+full scores in same number of challenges, then sort them by ascending hacker_id.
+
+Hackers - 
+hacker_id
+name 
+
+Difficulty-
+diffulty_level
+score
+
+Challenges -
+challenge_idhacker_id
+difficulty_level 
+
+Submissions-
+submission_id
+hacker_id
+challenge_id
+score
+
+
+select T1.hacker_id,T1.name from hackers as T1 
+join submissions as T2 on T1.hacker_id = T2.hacker_id
+join challenges as T3 on T2.challenge_id = T3.challenge_id 
+join difficulty as T4 on T3.difficulty_level = T4.difficulty_level
+where T4.score = T2.score 
+group by T1.hacker_id, T1.name
+having count(*) > 1
+order by count(*) desc, T1.hacker_id asc;
+
+=====================================================================================================================================
+
+Harry Potter and his friends are at Ollivander's with Ron, finally replacing Charlie's old broken wand.
+
+Hermione decides the best way to choose is by determining the minimum number of gold galleons needed to buy each non-evil wand of high
+power and age. Write a query to print the id, age, coins_needed, and power of the wands that Ron's interested in, sorted in order of 
+descending power. If more than one wand has same power, sort the result in order of descending age.
+
+wands - 
+id
+code
+coins_needed
+power
+
+
+wands_property - 
+code
+age
+is_evil
+
+
+select w.id, p.age, w.coins_needed, w.power from Wands as w 
+join Wands_Property as p
+on w.code = p.code
+where w.coins_needed = (select min(coins_needed)
+                       from Wands w2 inner join Wands_Property p2 
+                       on w2.code = p2.code 
+                       where p2.is_evil = 0 and p.age = p2.age and w.power = w2.power)
+order by w.power desc, p.age desc;
+
+
+=====================================================================================================================================
+
+Julia asked her students to create some coding challenges. Write a query to print the hacker_id, name, and the total number of 
+challenges created by each student. Sort your results by the total number of challenges in descending order. If more than one student
+created the same number of challenges, then sort the result by hacker_id. If more than one student created the same number of 
+challenges and the count is less than the maximum number of challenges created, then exclude those students from the result.
+
+Hackers- 
+hacker_id
+name
+
+Challenges-
+challenge_id
+hacker_id
+ 
+ 
+SELECT T1.hacker_id, T1.name, COUNT(*) as ct
+FROM hackers as T1
+INNER JOIN challenges as T2 ON T1.hacker_id = T2.hacker_id
+GROUP BY T1.hacker_id, T1.name
+HAVING ct = (
+    SELECT COUNT(*) as ctt
+    FROM challenges as T3
+    GROUP BY T3.hacker_id
+    ORDER BY ctt DESC
+    LIMIT 1
+) OR ct IN (
+    SELECT cnt
+    FROM (
+        SELECT COUNT(*) as cnt
+        FROM challenges as T4
+        GROUP BY T4.hacker_id
+    ) as cc
+    GROUP BY cnt
+    HAVING COUNT(cnt) = 1
+)
+ORDER BY ct DESC, T1.hacker_id;
+
+=====================================================================================================================================
+
+You did such a great job helping Julia with her last coding contest challenge that she wants you to work on this one, too!
+The total score of a hacker is the sum of their maximum scores for all of the challenges. Write a query to print the hacker_id, name, 
+and total score of the hackers ordered by the descending score. If more than one hacker achieved the same total score, then sort the 
+result by ascending hacker_id. Exclude all hackers with a total score of  from your result.
+
+
+WITH Table1 AS (
+    SELECT T1.hacker_id, MAX(score) AS max_score
+    FROM submissions as T1
+    GROUP BY T1.hacker_id, T1.challenge_id
+), 
+
+hacker_scores AS (
+    SELECT h.hacker_id, h.name, SUM(Table1.max_score) AS total_score
+    FROM Table1
+    JOIN hackers AS h ON Table1.hacker_id = h.hacker_id
+    GROUP BY h.hacker_id, h.name
+    HAVING SUM(Table1.max_score) != 0
+)
+SELECT hacker_id, name, total_score
+FROM hacker_scores
+ORDER BY total_score DESC, hacker_id;
+
+=====================================================================================================================================
+
+You are given a table, BST, containing two columns: N and P, where N represents the value of a node in Binary Tree, and P is the parent of N.
+Write a query to find the node type of Binary Tree ordered by the value of the node. Output one of the following for each node:
+
+Root: If node is root node.
+Leaf: If node is leaf node.
+Inner: If node is neither root nor leaf node.
+
+
+
+WITH Parent AS (
+  SELECT P FROM BST
+),
+Result AS (
+  SELECT N,P,
+    CASE 
+      WHEN P IS NULL THEN 'Root'
+      WHEN N IN (SELECT P FROM Parent) and P IS NOT NULL THEN 'Inner' 
+      Else 'Leaf'
+    END AS Kind
+  FROM BST
+)
+SELECT N, Kind 
+FROM Result
+ORDER BY N;
+
+=====================================================================================================================================
+
+Pivot the Occupation column in OCCUPATIONS so that each Name is sorted alphabetically and displayed underneath its corresponding 
+Occupation. The output column headers should be Doctor, Professor, Singer, and Actor, respectively.
+Note: Print NULL when there are no more names corresponding to an occupation.
+
+Occupations - 
+Name
+Occupation
+
+select Doctor,Professor,Singer,Actor 
+from
+(select 
+row_number() over (Partition by (occupation) order by name) row_no,name,occupation
+from 
+occupations
+)as src
+pivot
+(max(name) for occupation in (Doctor,Professor,Singer,Actor)) as pvt
+order by row_no;
+
+=====================================================================================================================================
+
+Generate the following two result sets:
+
+Query an alphabetically ordered list of all names in OCCUPATIONS, immediately followed by the first letter of each profession as a 
+parenthetical (i.e.: enclosed in parentheses). For example: AnActorName(A), ADoctorName(D), AProfessorName(P), and ASingerName(S).
+Query the number of ocurrences of each occupation in OCCUPATIONS. Sort the occurrences in ascending order, and output them in the 
+following format:
+
+There are a total of [occupation_count] [occupation]s.
+where [occupation_count] is the number of occurrences of an occupation in OCCUPATIONS and [occupation] is the lowercase occupation name.
+If more than one Occupation has the same [occupation_count], they should be ordered alphabetically.
+
+Note: There will be at least two entries in the table for each type of occupation.
+
+Input Format
+
+Occupations :
+Name
+Occupation 
+
+
+Sample Output
+
+Ashely(P)
+Christeen(P)
+Jane(A)
+Jenny(D)
+Julia(A)
+Ketty(P)
+Maria(A)
+Meera(S)
+Priya(S)
+Samantha(D)
+There are a total of 2 doctors.
+There are a total of 2 singers.
+There are a total of 3 actors.
+There are a total of 3 professors.
+
+
+Select Concat(NAME,'(',LEFT(Occupation, 1), ')') AS Result1 from Occupations order by name;
+Select Concat("There are a total of ", count(occupation), ' ',lower(occupation),'s.')
+as occupation_count  from occupations
+group by occupation
+order by occupation_count, occupation asc;
+
+
+=====================================================================================================================================
+
+
+Amber's conglomerate corporation just acquired some new companies. Each of the companies follows this hierarchy: 
+
+Given the table schemas below, write a query to print the company_code, founder name, total number of lead managers, 
+total number of senior managers, total number of managers, and total number of employees. Order your output by ascending company_code.
+
+Note:
+
+The tables may contain duplicate records.
+The company_code is string, so the sorting should not be numeric. For example, if the company_codes are C_1, C_2, and C_10, 
+then the ascending company_codes will be C_1, C_10, and C_2.
+
+
+
+
+select t1.company_code,t1.founder,count(distinct t2.lead_manager_code),
+count(distinct t2.senior_manager_code),count(distinct t2.manager_code),count(distinct t2.employee_code)
+from company as t1 join employee as t2
+on t1.company_code = t2.company_code
+group by t1.company_code,t1.founder 
+order by t1.company_code;
+
+
+=====================================================================================================================================
+Consider P1(a,b) and P2(c,d) to be two points on a 2D plane.
+
+ a, happens to equal the minimum value in Northern Latitude (LAT_N in STATION).
+ b, happens to equal the minimum value in Western Longitude (LONG_W in STATION).
+ c, happens to equal the maximum value in Northern Latitude (LAT_N in STATION).
+ d, happens to equal the maximum value in Western Longitude (LONG_W in STATION).
+Query the Manhattan Distance between points  P1 and P2 and round it to a scale of  decimal places.
+
+Input - 
+ID
+CITY
+STATE
+LAT_N
+LONG_W
+
+Manhattan Distance - 
+
+SELECT ROUND(ABS(MIN(LAT_N) - MAX(LAT_N)) + ABS(MIN(LONG_W) - MAX(LONG_W)), 4) AS ManhattanDistance FROM Station;
+
+Euclidean Distance - 
+
+select ROUND( 
+    POWER(
+        POWER(MAX(LAT_N)-MIN(LAT_N),2) + POWER(MAX(LONG_W)-MIN(LONG_W),2)
+          ,0.5),4) as Euclid from station; 
+
+=====================================================================================================================================
+
+A median is defined as a number separating the higher half of a data set from the lower half. 
+Query the median of the Northern Latitudes (LAT_N) from STATION and round your answer to  decimal places.
+
+Hint - 
+If you are using 1-based indexing, here's the modified formula for calculating the median:
+Arrange the dataset in ascending order.
+Calculate the total number of data points (n).
+If n is odd, the median is the value at position (n + 1) / 2.
+If n is even, the median is the average of the values at positions n / 2 and (n / 2) + 1.
+Using this formula with 1-based indexing, you can calculate the median for both odd and even cases.
+
+
+
+
+WITH 
+  CT AS (
+    SELECT COUNT(*) AS TotalRows FROM Station
+  ),
+  Table1 AS (
+    SELECT ROW_NUMBER() OVER (ORDER BY LAT_N) AS rn, LAT_N FROM Station
+  ),
+  Table2 AS (
+    SELECT DISTINCT
+      CASE
+        WHEN (SELECT TotalRows FROM CT) % 2 = 0 THEN
+          (SELECT AVG(LAT_N) FROM Table1 WHERE rn IN ((SELECT TotalRows FROM CT) / 2, (SELECT TotalRows FROM CT) / 2 + 1))
+        ELSE
+          (SELECT LAT_N FROM Table1 WHERE rn = ((SELECT TotalRows FROM CT) + 1) / 2)
+      END AS Med
+    FROM Table1
+  )
+SELECT CAST(Round(Med, 4) AS DECIMAL(10, 4)) FROM Table2 AS m;
+
+
+=====================================================================================================================================
+
+Samantha was tasked with calculating the average monthly salaries for all employees in the EMPLOYEES table, but did not realize her 
+keyboard's  key was broken until after completing the calculation. She wants your help finding the difference between her 
+miscalculation (using salaries with any zeros removed), and the actual average salary.
+
+Employees - 
+id
+name
+salary
+
+Write a query calculating the amount of error (difference of average of salaries before and after ), and round it up to the next integer.
+
+select round(avg(salary)) - round(avg(replace(salary,0,''))) from employees; (in MySQL)
+
+=====================================================================================================================================
+
+We define an employee's total earnings to be their monthly  worked, and the maximum total earnings to be the maximum total earnings 
+for any employee in the Employee table. Write a query to find the maximum total earnings for all employees as well as the total number
+of employees who have maximum total earnings. Then print these values as  space-separated integers.
+
+WITH T1 AS (
+    SELECT salary * months AS annual_salary
+    FROM employee
+),
+T2 AS (
+    SELECT MAX(annual_salary) AS maxsal
+    FROM T1
+),
+T3 AS (
+    SELECT COUNT(*) AS cnt
+    FROM T1, T2
+    WHERE T1.annual_salary >= T2.maxsal
+)
+SELECT CONCAT_WS(' ', T2.maxsal, T3.cnt) AS output
+FROM T2, T3;
+
+=====================================================================================================================================
+
+Query the greatest value of the Northern Latitudes (LAT_N) from STATION that is less than 137.2345 . Truncate your answer to 4 decimal places.
+
+Input Format - 
+ID
+CITY
+STATE
+LAT_N
+LONG_W
+
+The STATION table is described as follows:
+
+
+WITH T1 AS (
+    SELECT * 
+    FROM Station
+    WHERE LAT_N < 137.2345
+)
+SELECT Round(LAT_N,4)
+FROM (
+    SELECT *, DENSE_RANK() OVER (ORDER BY LAT_N DESC) AS rownum
+    FROM T1
+) ranked
+WHERE rownum = 1;
+
+=====================================================================================================================================
+Query the Western Longitude (LONG_W) for the largest Northern Latitude (LAT_N) in STATION that is less than .
+Round your answer to  decimal places.
+
+
+With T1 as 
+(
+Select * from Station
+    where
+    LAT_N < 137.2345
+)
+Select round(Long_W,4) from 
+(
+Select * , Dense_rank() over (order by lat_n DESC) as rownum from T1
+)T2 where rownum = 1;
+
+
+=====================================================================================================================================
+Query the smallest Northern Latitude (LAT_N) from STATION that is greater than . Round your answer to 4  decimal places.
+
+With T1 as 
+(
+Select * from Station 
+    where
+    LAT_N>38.7780
+)
+Select Round(MIN(LAT_N),4) from T1;
+
+=====================================================================================================================================
+Two pairs (X1, Y1) and (X2, Y2) are said to be symmetric pairs if X1 = Y2 and X2 = Y1.
+
+Write a query to output all such symmetric pairs in ascending order by the value of X. List the rows such that X1 ≤ Y1.
+
+SELECT Distinct A.X, A.Y
+FROM Functions AS A
+JOIN Functions AS B
+ON A.X = B.Y
+AND B.X = A.Y
+where A.X < A.Y
+
+union
+
+SELECT Distinct X, Y
+FROM Functions 
+where X = Y
+group by X, Y
+having count(*) > 1
+
+order by X
+
+=====================================================================================================================================
+
